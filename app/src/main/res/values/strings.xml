@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">VILLEGAS, ROGINAND</string>
+    <string-array name="year_lvl">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+    </string-array>
+</resources>

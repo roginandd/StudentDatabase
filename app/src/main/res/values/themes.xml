@@ -1,0 +1,25 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.StudentDatabase" parent="Theme.Material3.DayNight">
+        <item name="colorPrimary">#000000</item>
+        <item name="colorPrimaryDark">#000000</item>
+        <item name="android:statusBarColor">#000000</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+    </style>
+
+
+    <style name="Theme.StudentDatabase" parent="Theme.AppCompat.DayNight.DarkActionBar">
+        <!-- ActionBar Colors -->
+        <item name="colorPrimary">#000000</item>
+        <item name="colorPrimaryDark">#000000</item>
+
+        <!-- ✅ Ensure status bar is visible and drawn separately -->
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:statusBarColor">#000000</item>
+
+        <!-- Optional: keep white icons on black bar -->
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+</resources>
