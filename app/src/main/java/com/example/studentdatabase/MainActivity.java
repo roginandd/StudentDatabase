@@ -118,31 +118,15 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
-        if (resultCode == RESULT_OK && requestCode == 0 && data != null) {
-            String studentName = data.getStringExtra("studentName");
-            String program = data.getStringExtra("program");
-            String yearLevel = data.getStringExtra("yearLevel");
-            String imageUri = data.getStringExtra("imageUri");
-
-            String course = program + " - " + yearLevel;
-
-            // ✅ Create and save student
-            Student s = new Student(studentName, course, imageUri != null ? imageUri : "");
-            dbHelper.addStudent(s);
-
-            // ✅ Refresh list
-        }
-
-        if (resultCode == RESULT_OK)
+        if (resultCode == RESULT_OK) {
             refreshStudentList();
-
+        }
     }
     private void refreshStudentList() {
-        studentList.clear();
-        studentList.addAll(dbHelper.getAllStudents());
-        adapter.notifyDataSetChanged();
+        List<Student> newList = dbHelper.getAllStudents();
+        adapter.updateData(newList);
     }
+
 
 
 }

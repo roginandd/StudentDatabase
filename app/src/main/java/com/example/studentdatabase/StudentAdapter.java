@@ -2,6 +2,8 @@ package com.example.studentdatabase;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
@@ -14,25 +16,25 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.StudentHolder> {
 
-    private Context context;
-    private List<Student> studentList;
-    private List<Student> allStudents; // For search filtering
+    private final Context context;
+    private final List<Student> studentList;
+    private final List<Student> allStudents;
 
     public StudentAdapter(Context context, List<Student> studentList) {
         this.context = context;
-        this.studentList = studentList;
+        this.studentList = new ArrayList<>(studentList);
         this.allStudents = new ArrayList<>(studentList);
     }
 
-
-    // --- Inflate row layout ---
     @NonNull
     @Override
     public StudentHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -41,7 +43,6 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.StudentH
         return new StudentHolder(view);
     }
 
-    // --- Bind data to holder ---
     @Override
     public void onBindViewHolder(@NonNull StudentHolder holder, int position) {
         Student student = studentList.get(position);
@@ -49,12 +50,11 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.StudentH
         holder.txtName.setText(student.getName());
         holder.txtCourse.setText(student.getCourse());
 
-        // Display image (if available)
+        // --- Load & resize image ---
         if (student.getImage() != null && !student.getImage().isEmpty()) {
             try {
                 Uri uri = Uri.parse(student.getImage());
-                System.out.print("URI: "+ uri);
-                holder.imgStudent.setImageURI(uri);
+                resizeAndSetImage(holder.imgStudent, uri);
             } catch (Exception e) {
                 holder.imgStudent.setImageResource(R.drawable.baseline_person_24);
             }
@@ -62,38 +62,69 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.StudentH
             holder.imgStudent.setImageResource(R.drawable.baseline_person_24);
         }
 
-        // ✅ Popup menu appears when icon is tapped
+        // --- Popup menu (Edit/Delete) ---
         holder.menuButton.setOnClickListener(v -> {
             PopupMenu popupMenu = new PopupMenu(context, holder.menuButton);
             MenuInflater inflater = popupMenu.getMenuInflater();
             inflater.inflate(R.menu.mypopup, popupMenu.getMenu());
 
-            popupMenu.setOnMenuItemClickListener(item -> handleMenuClick(item, position));
+            popupMenu.setOnMenuItemClickListener(item -> {
+                int safePos = holder.getBindingAdapterPosition();
+                if (safePos == RecyclerView.NO_POSITION || safePos >= studentList.size())
+                    return false;
+                return handleMenuClick(item, safePos);
+            });
+
             popupMenu.show();
         });
     }
 
+    // --- Resize image before showing ---
+    private void resizeAndSetImage(ImageView imageView, Uri uri) {
+        try (InputStream inputStream = context.getContentResolver().openInputStream(uri)) {
+            Bitmap originalBitmap = BitmapFactory.decodeStream(inputStream);
+            if (originalBitmap != null) {
+                int maxSize = 500;
+                int width = originalBitmap.getWidth();
+                int height = originalBitmap.getHeight();
+                float ratio = (float) width / height;
 
+                int finalWidth = ratio > 1 ? maxSize : (int) (maxSize * ratio);
+                int finalHeight = ratio > 1 ? (int) (maxSize / ratio) : maxSize;
+
+                Bitmap resizedBitmap = Bitmap.createScaledBitmap(originalBitmap, finalWidth, finalHeight, true);
+                imageView.setImageBitmap(resizedBitmap);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            imageView.setImageResource(R.drawable.baseline_person_24);
+            Toast.makeText(context, "Failed to load image", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    // --- Handle edit/delete actions ---
     private boolean handleMenuClick(MenuItem item, int position) {
+        if (position < 0 || position >= studentList.size()) return false;
         Student s = studentList.get(position);
         DBHelper db = new DBHelper(context);
 
         if (item.getItemId() == R.id.edit) {
-            // ✅ Create intent to open AddMenu for editing
-            Intent intent = new Intent(context, AddMenu.class);
-            intent.putExtra("isEdit", true);
-            intent.putExtra("id", s.getId());
-            intent.putExtra("name", s.getName());
-            intent.putExtra("course", s.getCourse());
-            intent.putExtra("image", s.getImage());
-
-            // ✅ Start AddMenu
-            context.startActivity(intent);
+            if (context instanceof AppCompatActivity) {
+                AppCompatActivity activity = (AppCompatActivity) context;
+                Intent intent = new Intent(context, AddMenu.class);
+                intent.putExtra("isEdit", true);
+                intent.putExtra("id", s.getId());
+                intent.putExtra("name", s.getName());
+                intent.putExtra("course", s.getCourse());  // ex: BSIT
+                intent.putExtra("image", s.getImage());
+                activity.startActivityForResult(intent, 1);
+            }
             return true;
 
         } else if (item.getItemId() == R.id.delete) {
             db.deleteStudent(s.getId());
             studentList.remove(position);
+            allStudents.remove(s);
             notifyItemRemoved(position);
             Toast.makeText(context, "Deleted " + s.getName(), Toast.LENGTH_SHORT).show();
             return true;
@@ -107,16 +138,16 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.StudentH
         return studentList.size();
     }
 
-    // --- Filtering method for SearchView/EditText ---
+    // --- Filter by name or course ---
     public void filterList(String query) {
         studentList.clear();
-        if (query.isEmpty()) {
+        if (query == null || query.trim().isEmpty()) {
             studentList.addAll(allStudents);
         } else {
             query = query.toLowerCase().trim();
             for (Student s : allStudents) {
-                if (s.getName().toLowerCase().contains(query) ||
-                        s.getCourse().toLowerCase().contains(query)) {
+                if ((s.getName() != null && s.getName().toLowerCase().contains(query)) ||
+                        (s.getCourse() != null && s.getCourse().toLowerCase().contains(query))) {
                     studentList.add(s);
                 }
             }
@@ -124,10 +155,17 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.StudentH
         notifyDataSetChanged();
     }
 
-    // ==========================
-    // 🎓 INNER HOLDER CLASS
-    // ==========================
-    public class StudentHolder extends RecyclerView.ViewHolder {
+    // --- Refresh data when returning from edit ---
+    public void updateData(List<Student> newList) {
+        studentList.clear();
+        studentList.addAll(newList);
+        allStudents.clear();
+        allStudents.addAll(newList);
+        notifyDataSetChanged();
+    }
+
+    // --- ViewHolder ---
+    public static class StudentHolder extends RecyclerView.ViewHolder {
         ImageView imgStudent, menuButton;
         TextView txtName, txtCourse;
 
@@ -136,8 +174,7 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.StudentH
             imgStudent = itemView.findViewById(R.id.studentImage);
             txtName = itemView.findViewById(R.id.studentName);
             txtCourse = itemView.findViewById(R.id.studentCourse);
-            menuButton = itemView.findViewById(R.id.menuButton); // added menu icon reference
-
+            menuButton = itemView.findViewById(R.id.menuButton);
         }
     }
 }

@@ -30,15 +30,6 @@
             android:hint="Student Name..."
             android:inputType="text" />
 
-        <EditText
-            android:id="@+id/editTextText2"
-            android:layout_width="match_parent"
-            android:layout_height="65dp"
-            android:layout_marginBottom="50dp"
-            android:ems="10"
-            android:hint="Program"
-            android:inputType="text" />
-
         <Spinner
             android:id="@+id/spinner"
             android:layout_width="match_parent"

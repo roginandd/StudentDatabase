@@ -14,7 +14,7 @@ public class DBHelper extends SQLiteOpenHelper {
     static final String STUDENTS = "students";
 
     public DBHelper(@Nullable Context context) {
-        super(context, DATABASE, null, 4);
+        super(context, DATABASE, null, 12);
     }
 
 
@@ -56,7 +56,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public ArrayList<Student> getAllStudents() {
         ArrayList<Student> list = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(STUDENTS, null, null, null, null, null, "name");
+        Cursor cursor = db.query(STUDENTS, null, null, null, null, null, null);
 
         if (cursor.moveToFirst()) {
             do {

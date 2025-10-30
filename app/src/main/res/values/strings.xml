@@ -1,9 +1,26 @@
 <resources>
     <string name="app_name">VILLEGAS, ROGINAND</string>
     <string-array name="year_lvl">
-        <item>1</item>
-        <item>2</item>
-        <item>3</item>
-        <item>4</item>
+        <item>BSCS</item>
+        <item>BSIT</item>
+        <item>BSCpE</item>
+        <item>BSIS</item>
+        <item>BSECE</item>
+        <item>BSDS</item>
+        <item>BSEE</item>
+        <item>BSME</item>
+        <item>BSCE</item>
+        <item>BSArch</item>
+        <item>BSA</item>
+        <item>BSBA</item>
+        <item>BSN</item>
+        <item>BSPsych</item>
+        <item>BSBio</item>
+        <item>BSMath</item>
+        <item>BSEd</item>
+        <item>BSCrim</item>
+        <item>BSHM</item>
+        <item>BSTM</item>
+        <item>BSP</item>
     </string-array>
 </resources>
